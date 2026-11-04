@@ -18,7 +18,8 @@ exercises/      YOUR workspace - generated stubs
 tests/          pytest suite; runs against dsa/ or exercises/
 spark_lab/      datagen, timing/plan helpers, optimization techniques
 warehouse/      SCD logic (pure Python) + Delta MERGE SQL builder
-notebooks/      Databricks source-format notebooks (00-04)
+levels/         grader, test cases, answer key and reference solutions for the leveled tests
+notebooks/      Databricks source-format notebooks (00-05 topic labs, 10-31 leveled track)
 docs/           cheat sheet + data warehousing spike guide
 tools/          make_exercises.py (regenerate / reset stubs)
 ```
@@ -55,7 +56,21 @@ databricks workspace import-dir . /Workspace/Users/<you>/databricks-interview-pr
 | `04_data_warehousing_lab` | 45-60 min | bronze -> silver -> star schema, SCD2 MERGE, point-in-time fact load, constraints, BI SQL |
 | `05_spot_the_antipattern` | 45 min | 20 "why is this code not optimal?" brain teasers (unnecessary Python <-> PySpark mixing, 2 traps). Diagnose them before opening `05_spot_the_antipattern_ANSWERS`, which has fixes and bad-vs-good timings |
 
-## 3. Self-test workflow
+## 3. Leveled track: walkthrough, then test (Junior -> Mid -> Senior)
+
+Each level has a **walkthrough** (worked examples, traces, and "predict the output" checkpoints) followed by a **self-grading test**.
+Tests score coding problems against test cases, compare Spark answers to the expected result, score multiple choice, and
+(at Senior) take your rubric-based scores for written scenarios. They end with a scorecard and a verdict. **Pass = 85%**, then move up a level.
+
+| Level | Walkthrough | Test | Covers |
+|---|---|---|---|
+| Junior | `10_junior_walkthrough` | `11_junior_test` (~60 min) | hash maps/sets, two pointers, binary search, BFS; transformations vs actions, join types, built-ins vs UDFs; facts/dims, grain, SCD1 vs SCD2, medallion |
+| Mid | `20_mid_walkthrough` | `21_mid_test` (~75 min) | sliding window, prefix sums, binary search on the answer, topological sort, heaps, intervals; window functions, reading plans, skew detection, AQE; SCD2 MERGE, point-in-time joins, Change Data Feed |
+| Senior | `30_senior_walkthrough` | `31_senior_test` (~2 h) | Dijkstra, LRU design, sweep line, union-find, overlap checks; salting vs AQE, gaps & islands, sessionization, idempotent writes; SCD2 rebuild with late data; 5 written design/diagnosis scenarios |
+
+Spoilers: solutions are in `levels/reference.py`, and explanations and rubrics in `levels/ANSWER_KEY.md`. The walkthroughs use different data from the tests.
+
+## 4. Self-test workflow (topic drills)
 
 1. Open `exercises/<topic>.py` and implement a function (the docstring is the problem statement).
 2. In `01_dsa_practice`, set widgets `target=exercises`, `topic=<topic>`, and run the test cell.
@@ -73,14 +88,15 @@ python -m pytest tests -q
 $env:DSA_TARGET="exercises"; python -m pytest tests/test_arrays.py -q
 ```
 
-## 4. Free Edition / serverless gotchas (good interview material too)
+## 5. Free Edition / serverless gotchas (good interview material too)
 - No `sparkContext` / RDD API, so use DataFrame APIs (`spark_partition_id()` instead of `getNumPartitions()`).
 - `df.cache()` isn't supported. Materialize to a Delta table instead.
 - Most `spark.conf` keys are locked (AQE, Photon and autoscaling are managed). The labs use `try_set_conf` and report what they can't set.
 - Compute quotas are small. Start with the default `n_orders` (3M) and scale up once it runs.
 - Serverless timings are noisy. Compare relative differences, and use the 2nd+ run.
 
-## 5. Suggested 7-day plan
+## 6. Suggested 7-day plan
+(Alternative: do the leveled track, one level every two days, retaking missed questions the next morning.)
 | Day | Focus |
 |---|---|
 | 1 | Arrays + Hash Maps exercises; `02_python_complexity_lab` |
