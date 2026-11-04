@@ -1,0 +1,92 @@
+# Databricks Delivery Solutions Architect - Interview Prep Lab
+
+A hands-on test bed for the technical interview. You write code, test yourself, and practice
+explaining optimizations. It runs locally (pure Python) and in a **Databricks Free Edition**
+workspace (serverless).
+
+| Area | What's here |
+|---|---|
+| **DS&A** (Arrays, Strings, Binary Search, Graphs, Hash Maps) | `dsa/` reference solutions with pattern, complexity and talk-track docstrings. `exercises/` blank stubs to implement. `tests/` has 80 tests. |
+| **Python complexity & optimization** | `dsa/python_optimizations.py` (7 slow/fast pairs), `dsa/benchmark.py` (empirical Big-O fitting) |
+| **PySpark optimization** | `spark_lab/` helpers + `notebooks/03_pyspark_optimization_lab.py`: plans, joins, skew/salting, shuffle, UDFs, dedupe, small files, liquid clustering |
+| **Data Warehousing (spike)** | `warehouse/` SCD1/SCD2 logic + Delta MERGE generator. `notebooks/04_data_warehousing_lab.py` builds a medallion star schema. `docs/data_warehousing_spike.md` is the deep-dive guide. |
+| **Reference** | `docs/cheatsheet.md` |
+
+```
+dsa/            reference solutions (don't peek until you've tried)
+exercises/      YOUR workspace - generated stubs
+tests/          pytest suite; runs against dsa/ or exercises/
+spark_lab/      datagen, timing/plan helpers, optimization techniques
+warehouse/      SCD logic (pure Python) + Delta MERGE SQL builder
+notebooks/      Databricks source-format notebooks (00-04)
+docs/           cheat sheet + data warehousing spike guide
+tools/          make_exercises.py (regenerate / reset stubs)
+```
+
+---
+
+## 1. Get it into Databricks Free Edition
+
+Sign up at https://www.databricks.com/learn/free-edition (serverless only, which is all this needs).
+
+**Option A - Git folder (recommended: edits sync, easy reset)**
+1. Push this folder to a GitHub repo (private is fine).
+2. In Databricks: **Workspace -> your user folder -> Create -> Git folder**, paste the repo URL.
+3. Open `notebooks/00_setup` and **Run all**.
+
+**Option B - Databricks CLI (no GitHub)**
+```bash
+databricks workspace import-dir . /Workspace/Users/<you>/databricks-interview-prep
+```
+
+**Option C - ZIP upload**: zip the folder, then **Workspace -> Import -> File** and pick the .zip.
+
+> Notebooks find the libraries by adding the repo root (`..` from `notebooks/`) to `sys.path`.
+> Keep the folder structure intact.
+
+## 2. Run order
+
+| Notebook | Time | Purpose |
+|---|---|---|
+| `00_setup` | 2 min | install pytest, smoke-test reference solutions, create schema `workspace.interview_prep` |
+| `01_dsa_practice` | ongoing | run tests against **your** code, draw a random mock-interview problem |
+| `02_python_complexity_lab` | 15 min | prove Big-O empirically, see slow vs fast Python |
+| `03_pyspark_optimization_lab` | 30-45 min | the 5 S's: Spill, Skew, Shuffle, Storage, Serialization |
+| `04_data_warehousing_lab` | 45-60 min | bronze -> silver -> star schema, SCD2 MERGE, point-in-time fact load, constraints, BI SQL |
+| `05_spot_the_antipattern` | 45 min | 20 "why is this code not optimal?" brain teasers (unnecessary Python <-> PySpark mixing, 2 traps). Diagnose them before opening `05_spot_the_antipattern_ANSWERS`, which has fixes and bad-vs-good timings |
+
+## 3. Self-test workflow
+
+1. Open `exercises/<topic>.py` and implement a function (the docstring is the problem statement).
+2. In `01_dsa_practice`, set widgets `target=exercises`, `topic=<topic>`, and run the test cell.
+3. Green? Compare with `dsa/<topic>.py` and read the TALK TRACK line out loud.
+4. Reset a topic to blank: `python tools/make_exercises.py --force` (resets ALL stubs; add `--hints` to keep pattern hints).
+
+Locally (Windows PowerShell):
+```bash
+python -m pip install pytest
+```
+```bash
+python -m pytest tests -q
+```
+```powershell
+$env:DSA_TARGET="exercises"; python -m pytest tests/test_arrays.py -q
+```
+
+## 4. Free Edition / serverless gotchas (good interview material too)
+- No `sparkContext` / RDD API, so use DataFrame APIs (`spark_partition_id()` instead of `getNumPartitions()`).
+- `df.cache()` isn't supported. Materialize to a Delta table instead.
+- Most `spark.conf` keys are locked (AQE, Photon and autoscaling are managed). The labs use `try_set_conf` and report what they can't set.
+- Compute quotas are small. Start with the default `n_orders` (3M) and scale up once it runs.
+- Serverless timings are noisy. Compare relative differences, and use the 2nd+ run.
+
+## 5. Suggested 7-day plan
+| Day | Focus |
+|---|---|
+| 1 | Arrays + Hash Maps exercises; `02_python_complexity_lab` |
+| 2 | Strings + Binary Search exercises; cheat sheet patterns |
+| 3 | Graphs exercises; mock problem x2 (timed, out loud) |
+| 4 | `03_pyspark_optimization_lab`: practice every talk track until you can say it without notes; then `05_spot_the_antipattern` |
+| 5 | `04_data_warehousing_lab` end to end; implement `exercises/scd.py` from scratch |
+| 6 | DW spike guide sections 6-7 (migration playbook + practice prompts); do stretch exercises 1-4 |
+| 7 | Full mock: 1 coding problem + 1 optimization diagnosis + 1 DW design, 60 min total |

@@ -1,0 +1,5 @@
+# Local practice (pure Python DS&A + SCD tests)
+pytest>=8
+# Optional, only for running spark_lab locally (Databricks already has it).
+# Needs a Java version supported by your PySpark release.
+# pyspark>=3.5
