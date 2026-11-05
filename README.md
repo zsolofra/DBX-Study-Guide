@@ -58,7 +58,10 @@ databricks workspace import-dir . /Workspace/Users/<you>/databricks-interview-pr
 
 ## 3. Leveled track: walkthrough, then test (Junior -> Mid -> Senior)
 
-Each level has a **walkthrough** (worked examples, traces, and "predict the output" checkpoints) followed by a **self-grading test**.
+Each level is a **class notebook** followed by a **self-grading test**. The classes are built like a Databricks Academy course:
+a `%run ./Includes/Classroom-Setup` cell, learning objectives, and numbered lessons (use the notebook's **Table of contents** to jump between them).
+Each lesson runs **CONCEPT, then DEMO, then Breakdown, then KNOWLEDGE CHECK**, one idea per cell, and ends with a **YOUR TURN** exercise that checks itself
+(`lesson.hint("J-1")` if you're stuck, `lesson.solution("J-1")` to see the answer).
 Tests score coding problems against test cases, compare Spark answers to the expected result, score multiple choice, and
 (at Senior) take your rubric-based scores for written scenarios. They end with a scorecard and a verdict. **Pass = 85%**, then move up a level.
 

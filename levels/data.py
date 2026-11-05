@@ -70,4 +70,26 @@ def senior(spark):
     return {"events": events, "change_log": change_log, "orders": orders}
 
 
-DATASETS = {"junior": junior, "mid": mid, "senior": senior}
+def senior_lesson(spark):
+    """Walkthrough-only data (different from the senior test on purpose)."""
+    t = lambda h, m: datetime(2025, 5, 1, h, m)  # noqa: E731
+    readings = spark.createDataFrame([
+        ("m1", t(8, 0), "OK"), ("m1", t(8, 5), "OK"), ("m1", t(8, 10), "FAIL"), ("m1", t(8, 15), "FAIL"),
+        ("m1", t(8, 20), "OK"), ("m1", t(8, 25), "FAIL"),
+        ("m2", t(8, 0), "FAIL"), ("m2", t(8, 5), "OK"), ("m2", t(8, 10), "FAIL"),
+        ("m3", t(8, 0), "OK"), ("m3", t(8, 5), "OK"),
+    ], "machine string, ts timestamp, status string")
+    price_log = spark.createDataFrame([
+        ("sku1", 10.0, date(2025, 1, 1), datetime(2025, 1, 1)),
+        ("sku1", 12.0, date(2025, 4, 1), datetime(2025, 4, 1)),
+        ("sku1", 11.0, date(2025, 2, 15), datetime(2025, 4, 3)),   # late-arriving change
+        ("sku1", 11.0, date(2025, 3, 1), datetime(2025, 4, 3)),    # no-op: same price as previous version
+        ("sku2", 20.0, date(2025, 1, 1), datetime(2025, 1, 1)),
+        ("sku2", 25.0, date(2025, 3, 1), datetime(2025, 3, 1)),
+        ("sku2", 22.0, date(2025, 3, 1), datetime(2025, 3, 10)),   # correction of the 03-01 price
+        ("sku3", 5.0, date(2025, 4, 1), datetime(2025, 4, 1)),     # not effective yet on 03-15
+    ], "sku string, price double, effective_date date, ingested_at timestamp")
+    return {"readings": readings, "price_log": price_log}
+
+
+DATASETS = {"junior": junior, "mid": mid, "senior": senior, "senior_lesson": senior_lesson}

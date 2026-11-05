@@ -52,33 +52,10 @@ class Scorecard:
 
     # ----------------------------------------------------------- coding tests
     def grade(self, qid, fn):
-        spec = C.FUNCTION_CASES[qid]
-        validator = spec.get("validator", C._eq)
-        runner = spec.get("runner")
-        passed, fails = 0, []
-        for args, expected in spec["cases"]:
-            call_args = copy.deepcopy(args)
-            try:
-                got = runner(fn, call_args) if runner else fn(*call_args)
-            except NotImplementedError:
-                return self._record(qid, 0, 1, "not attempted")
-            except Exception as e:  # noqa: BLE001
-                got = f"raised {type(e).__name__}: {e}"
-            if not isinstance(got, str) or not got.startswith("raised"):
-                try:
-                    ok = validator(args, got, expected)
-                except Exception:  # noqa: BLE001
-                    ok = False
-            else:
-                ok = False
-            if ok:
-                passed += 1
-            else:
-                fails.append((args, expected, got))
-        total = len(spec["cases"])
-        note = f"{passed}/{total} cases"
-        for args, expected, got in fails[:3]:
-            note += f"\n      input={_short(args)}  expected={_short(expected)}  got={_short(got)}"
+        result = run_cases(C.FUNCTION_CASES[qid], fn)
+        if result is None:
+            return self._record(qid, 0, 1, "not attempted")
+        passed, total, note = result
         self._record(qid, round(passed / total, 2), 1, note)
 
     # ------------------------------------------------------------ spark tests
@@ -86,25 +63,8 @@ class Scorecard:
         if df is None:
             return self._record(qid, 0, 1, "not attempted")
         ref_fn, inputs, cols = R.SPARK[qid]
-        missing = [c for c in cols if c not in df.columns]
-        if missing:
-            return self._record(qid, 0, 1, f"missing columns {missing}; expected exactly {cols}")
-        try:
-            got = sorted((tuple(_norm(r[c]) for c in cols) for r in df.select(*cols).collect()), key=repr)
-        except Exception as e:  # noqa: BLE001
-            return self._record(qid, 0, 1, f"query failed: {type(e).__name__}: {str(e)[:200]}")
-        expected_df = ref_fn(*[self.data[name] for name in inputs])
-        expected = sorted((tuple(_norm(r[c]) for c in cols) for r in expected_df.collect()), key=repr)
-        if got == expected:
-            return self._record(qid, 1, 1, f"{len(got)} rows match")
-        extra = [r for r in got if r not in expected][:3]
-        lost = [r for r in expected if r not in got][:3]
-        note = f"got {len(got)} rows, expected {len(expected)}"
-        if extra:
-            note += f"\n      unexpected rows: {extra}"
-        if lost:
-            note += f"\n      missing rows:    {lost}"
-        self._record(qid, 0, 1, note)
+        ok, note = compare_frames(df, lambda: ref_fn(*[self.data[name] for name in inputs]), cols)
+        self._record(qid, 1 if ok else 0, 1, note)
 
     # ---------------------------------------------------------- other scoring
     def mcq(self, qid, answer):
@@ -144,6 +104,56 @@ class Scorecard:
         if todo:
             print(f"  Review: {', '.join(todo)}")
         return pct
+
+
+def run_cases(spec, fn):
+    """Run a FUNCTION_CASES-style spec. Returns None if not attempted, else (passed, total, note)."""
+    validator = spec.get("validator", C._eq)
+    runner = spec.get("runner")
+    passed, fails = 0, []
+    for args, expected in spec["cases"]:
+        call_args = copy.deepcopy(args)
+        try:
+            got = runner(fn, call_args) if runner else fn(*call_args)
+            try:
+                ok = validator(args, got, expected)
+            except Exception:  # noqa: BLE001
+                ok = False
+        except NotImplementedError:
+            return None
+        except Exception as e:  # noqa: BLE001
+            got, ok = f"raised {type(e).__name__}: {e}", False
+        if ok:
+            passed += 1
+        else:
+            fails.append((args, expected, got))
+    total = len(spec["cases"])
+    note = f"{passed}/{total} cases"
+    for args, expected, got in fails[:3]:
+        note += f"\n      input={_short(args)}  expected={_short(expected)}  got={_short(got)}"
+    return passed, total, note
+
+
+def compare_frames(df, expected_fn, cols):
+    """Compare df to the reference DataFrame (built lazily by expected_fn) on `cols`. Returns (ok, note)."""
+    missing = [c for c in cols if c not in df.columns]
+    if missing:
+        return False, f"missing columns {missing}; expected exactly {cols}"
+    try:
+        got = sorted((tuple(_norm(r[c]) for c in cols) for r in df.select(*cols).collect()), key=repr)
+    except Exception as e:  # noqa: BLE001
+        return False, f"query failed: {type(e).__name__}: {str(e)[:200]}"
+    expected = sorted((tuple(_norm(r[c]) for c in cols) for r in expected_fn().collect()), key=repr)
+    if got == expected:
+        return True, f"{len(got)} rows match"
+    extra = [r for r in got if r not in expected][:3]
+    lost = [r for r in expected if r not in got][:3]
+    note = f"got {len(got)} rows, expected {len(expected)}"
+    if extra:
+        note += f"\n      unexpected rows: {extra}"
+    if lost:
+        note += f"\n      missing rows:    {lost}"
+    return False, note
 
 
 def _short(x, n=90):
