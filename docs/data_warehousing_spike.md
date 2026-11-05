@@ -4,7 +4,7 @@ Your spike is where the interviewer will push deepest. Aim to be able to (1) mod
 (2) build it on Databricks, (3) make it fast, (4) migrate a legacy one to it, and
 (5) explain the trade-offs to both an engineer and an exec.
 
-Hands-on companion: `notebooks/04_data_warehousing_lab.py` and `warehouse/`.
+Hands-on companion: `notebooks/04_data_warehousing_lab.ipynb` and `warehouse/`.
 
 ---
 

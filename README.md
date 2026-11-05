@@ -8,8 +8,8 @@ workspace (serverless).
 |---|---|
 | **DS&A** (Arrays, Strings, Binary Search, Graphs, Hash Maps) | `dsa/` reference solutions with pattern, complexity and talk-track docstrings. `exercises/` blank stubs to implement. `tests/` has 80 tests. |
 | **Python complexity & optimization** | `dsa/python_optimizations.py` (7 slow/fast pairs), `dsa/benchmark.py` (empirical Big-O fitting) |
-| **PySpark optimization** | `spark_lab/` helpers + `notebooks/03_pyspark_optimization_lab.py`: plans, joins, skew/salting, shuffle, UDFs, dedupe, small files, liquid clustering |
-| **Data Warehousing (spike)** | `warehouse/` SCD1/SCD2 logic + Delta MERGE generator. `notebooks/04_data_warehousing_lab.py` builds a medallion star schema. `docs/data_warehousing_spike.md` is the deep-dive guide. |
+| **PySpark optimization** | `spark_lab/` helpers + `notebooks/03_pyspark_optimization_lab.ipynb`: plans, joins, skew/salting, shuffle, UDFs, dedupe, small files, liquid clustering |
+| **Data Warehousing (spike)** | `warehouse/` SCD1/SCD2 logic + Delta MERGE generator. `notebooks/04_data_warehousing_lab.ipynb` builds a medallion star schema. `docs/data_warehousing_spike.md` is the deep-dive guide. |
 | **Reference** | `docs/cheatsheet.md` |
 
 ```
@@ -19,9 +19,9 @@ tests/          pytest suite; runs against dsa/ or exercises/
 spark_lab/      datagen, timing/plan helpers, optimization techniques
 warehouse/      SCD logic (pure Python) + Delta MERGE SQL builder
 levels/         grader, test cases, answer key and reference solutions for the leveled tests
-notebooks/      Databricks source-format notebooks (00-05 topic labs, 10-31 leveled track)
+notebooks/      Jupyter notebooks (.ipynb): 00-05 topic labs, 10-31 leveled track, Includes/ setup
 docs/           cheat sheet + data warehousing spike guide
-tools/          make_exercises.py (regenerate / reset stubs)
+tools/          make_exercises.py (reset stubs), py_to_ipynb.py (convert Databricks .py notebooks), notebook_audit.py (check every code cell has an explanation)
 ```
 
 ---
@@ -44,6 +44,10 @@ databricks workspace import-dir . /Workspace/Users/<you>/databricks-interview-pr
 
 > Notebooks find the libraries by adding the repo root (`..` from `notebooks/`) to `sys.path`.
 > Keep the folder structure intact.
+
+**Notebook format:** every notebook is a Jupyter `.ipynb` laid out as *explanation (markdown), then code, then explanation*. Databricks opens
+`.ipynb` files as notebooks. The `%sql`, `%pip` and `%run` cells are Databricks magics, so run the notebooks in Databricks rather than
+plain Jupyter. Run `python tools/notebook_audit.py` after editing to confirm every code cell still has an explanation above it.
 
 ## 2. Run order
 
