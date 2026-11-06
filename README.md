@@ -21,7 +21,7 @@ warehouse/      SCD logic (pure Python) + Delta MERGE SQL builder
 levels/         grader, test cases, answer key and reference solutions for the leveled tests
 notebooks/      Jupyter notebooks (.ipynb): 00-05 topic labs, 10-31 leveled track, Includes/ setup
 docs/           cheat sheet + data warehousing spike guide
-tools/          make_exercises.py (reset stubs), py_to_ipynb.py (convert Databricks .py notebooks), notebook_audit.py (check markdown and code strictly alternate)
+tools/          make_exercises.py (reset stubs), py_to_ipynb.py (convert Databricks .py notebooks), notebook_audit.py (check markdown and code strictly alternate), build_dsa_walkthrough.py (rebuild notebook 06 after editing `dsa/`)
 ```
 
 ---
@@ -59,6 +59,7 @@ plain Jupyter. Run `python tools/notebook_audit.py` after editing to confirm the
 | `03_pyspark_optimization_lab` | 30-45 min | the 5 S's: Spill, Skew, Shuffle, Storage, Serialization |
 | `04_data_warehousing_lab` | 45-60 min | bronze -> silver -> star schema, SCD2 MERGE, point-in-time fact load, constraints, BI SQL |
 | `05_spot_the_antipattern` | 45 min | 20 "why is this code not optimal?" brain teasers (unnecessary Python <-> PySpark mixing, 2 traps). Diagnose them before opening `05_spot_the_antipattern_ANSWERS`, which has fixes and bad-vs-good timings |
+| `06_dsa_code_walkthrough` | ~3 h, or one part at a time | every function in `dsa/`: the problem, the idea, the complexity, the real source, a runnable example, and what to notice. Contains the `exercises/` solutions, so try those first if you want to test yourself |
 
 ## 3. Leveled track: walkthrough, then test (Junior -> Mid -> Senior)
 

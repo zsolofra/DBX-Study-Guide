@@ -1,11 +1,13 @@
 """Notebook layout rules: markdown and code strictly alternate, and answers stay hidden behind code."""
 import json
 import re
+import sys
 from pathlib import Path
 
 import pytest
 
-NOTEBOOKS = sorted((Path(__file__).resolve().parents[1] / "notebooks").rglob("*.ipynb"))
+ROOT = Path(__file__).resolve().parents[1]
+NOTEBOOKS = sorted((ROOT / "notebooks").rglob("*.ipynb"))
 
 
 def cells_of(path):
@@ -14,7 +16,24 @@ def cells_of(path):
 
 
 def test_notebooks_exist():
-    assert len(NOTEBOOKS) == 14
+    assert len(NOTEBOOKS) == 15
+
+
+def test_dsa_walkthrough_matches_dsa_source():
+    # build_cells also fails if any function in dsa/ has no section
+    sys.path.insert(0, str(ROOT / "tools"))
+    from build_dsa_walkthrough import OUTPUT, build_notebook_dict
+
+    on_disk = json.loads(OUTPUT.read_text(encoding="utf-8"))
+    assert on_disk == build_notebook_dict(), "stale: run python tools/build_dsa_walkthrough.py"
+
+
+def test_dsa_walkthrough_runs_top_to_bottom(monkeypatch, capsys):
+    monkeypatch.chdir(ROOT / "notebooks")
+    namespace = {"__name__": "walkthrough"}
+    for kind, text in cells_of(ROOT / "notebooks" / "06_dsa_code_walkthrough.ipynb"):
+        if kind == "code":
+            exec(compile(text, "06_dsa_code_walkthrough", "exec"), namespace)
 
 
 @pytest.mark.parametrize("path", NOTEBOOKS, ids=lambda p: p.stem)
