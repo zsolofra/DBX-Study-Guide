@@ -21,7 +21,7 @@ warehouse/      SCD logic (pure Python) + Delta MERGE SQL builder
 levels/         grader, test cases, answer key and reference solutions for the leveled tests
 notebooks/      Jupyter notebooks (.ipynb): 00-05 topic labs, 10-31 leveled track, Includes/ setup
 docs/           cheat sheet + data warehousing spike guide
-tools/          make_exercises.py (reset stubs), py_to_ipynb.py (convert Databricks .py notebooks), notebook_audit.py (check every code cell has an explanation)
+tools/          make_exercises.py (reset stubs), py_to_ipynb.py (convert Databricks .py notebooks), notebook_audit.py (check markdown and code strictly alternate)
 ```
 
 ---
@@ -45,9 +45,9 @@ databricks workspace import-dir . /Workspace/Users/<you>/databricks-interview-pr
 > Notebooks find the libraries by adding the repo root (`..` from `notebooks/`) to `sys.path`.
 > Keep the folder structure intact.
 
-**Notebook format:** every notebook is a Jupyter `.ipynb` laid out as *explanation (markdown), then code, then explanation*. Databricks opens
+**Notebook format:** every notebook is a Jupyter `.ipynb` that strictly alternates *markdown, code, markdown, code*, so each code cell sits between two explanations. Written answers go in code cells as text. Databricks opens
 `.ipynb` files as notebooks. The `%sql`, `%pip` and `%run` cells are Databricks magics, so run the notebooks in Databricks rather than
-plain Jupyter. Run `python tools/notebook_audit.py` after editing to confirm every code cell still has an explanation above it.
+plain Jupyter. Run `python tools/notebook_audit.py` after editing to confirm the alternation still holds (`tests/test_notebooks.py` enforces it too).
 
 ## 2. Run order
 

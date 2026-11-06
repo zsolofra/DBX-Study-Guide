@@ -1,52 +1,42 @@
-"""List code cells that are not directly preceded by a markdown explanation.
+"""Check that every notebook strictly alternates: markdown, code, markdown, code, ..., markdown.
 
-    python tools/notebook_audit.py            # audits notebooks/**/*.py (Databricks source) or *.ipynb
+    python tools/notebook_audit.py
 """
 import json
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SEP = "# COMMAND ----------"
 
 
-def cells_from_py(path):
-    text = path.read_text(encoding="utf-8").replace("# Databricks notebook source\n", "", 1)
-    out = []
-    for raw in text.split(SEP):
-        body = raw.strip("\n")
-        if not body.strip():
-            continue
-        kind = "markdown" if body.lstrip().startswith("# MAGIC %md") else "code"
-        out.append((kind, body))
-    return out
-
-
-def cells_from_ipynb(path):
+def load_cells(path):
     nb = json.loads(path.read_text(encoding="utf-8"))
     return [(c["cell_type"], "".join(c["source"])) for c in nb["cells"]]
 
 
-def audit(path):
-    cells = cells_from_py(path) if path.suffix == ".py" else cells_from_ipynb(path)
-    gaps = []
-    for i, (kind, body) in enumerate(cells):
-        if kind == "code" and (i == 0 or cells[i - 1][0] != "markdown"):
-            first = next((l for l in body.splitlines() if l.strip()), "")[:70]
-            gaps.append((i, first))
-    return len(cells), gaps
+def problems(cells):
+    found = []
+    if cells[0][0] != "markdown":
+        found.append("does not start with markdown")
+    if cells[-1][0] != "markdown":
+        found.append("does not end with markdown")
+    for i in range(1, len(cells)):
+        if cells[i][0] == cells[i - 1][0]:
+            first = next((l for l in cells[i][1].splitlines() if l.strip()), "")[:70]
+            found.append(f"cell {i}: two {cells[i][0]} cells in a row: {first}")
+    return found
 
 
 def main():
-    files = sorted((ROOT / "notebooks").rglob("*.ipynb")) or sorted((ROOT / "notebooks").rglob("*.py"))
     total = 0
-    for f in files:
-        n, gaps = audit(f)
-        total += len(gaps)
-        print(f"{f.relative_to(ROOT)}: {n} cells, {len(gaps)} code cells without an explanation above")
-        for i, first in gaps:
-            print(f"    cell {i}: {first}")
-    print(f"TOTAL gaps: {total}")
+    for path in sorted((ROOT / "notebooks").rglob("*.ipynb")):
+        cells = load_cells(path)
+        found = problems(cells)
+        total += len(found)
+        print(f"{path.relative_to(ROOT)}: {len(cells)} cells, {len(found)} problems")
+        for p in found:
+            print(f"    {p}")
+    print(f"TOTAL problems: {total}")
     sys.exit(1 if total else 0)
 
 
